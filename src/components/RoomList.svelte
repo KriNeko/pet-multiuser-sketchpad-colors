@@ -48,10 +48,13 @@
 <script>
 
 import { slide } from 'svelte/transition'
-import { currentRoom, roomMap } from '@/store/rooms.js'
+import { currentRoom, roomMap, roomActive } from '@/store/rooms.js'
 import { id as selfUserID } from '@/store/auth.js'
 import { userMap } from '@/store/users.js'
-import { rpc } from '@/control/net.js'
+import { rpc, isConnected } from '@/control/net.js'
+import { penWriterClient } from '@/control/penWriterClient.js'
+
+import { lineColorAlphaArray, lineWidth } from '@/store/settings.js'
 
 import { users, rooms, selfRoomActive } from '@/store/common.js'
 
@@ -81,7 +84,7 @@ const newroomKeydown = async e => {
 const roomCreate = async roomName => {
 	try {
 		await rpc.call('actionRoomCreate', { roomName })
-		await rpc.call('actionRoomConnect', { roomName })
+		await roomConnect({ roomName })
 		newRoomName = ''
 	} catch {
 	}
@@ -90,10 +93,22 @@ const roomConnect = async room => {
 	if ( $selfRoomActive?.id === room.id )
 		return
 	try {
-		await rpc.call('actionRoomConnect', { roomName: room.roomName })
+		$roomActive = null
+		$roomActive = await rpc.call('actionRoomConnect', { roomName: room.roomName })
 	} catch {
 	}
 }
+
+function watchPenColor() {
+	if ( !$roomActive ) return
+	penWriterClient.penSetColor(...$lineColorAlphaArray)
+}
+$: watchPenColor($roomActive, $lineColorAlphaArray)
+function watchPenLineWidth() {
+	if ( !$roomActive ) return
+	penWriterClient.penSetLineWidth($lineWidth)
+}
+$: watchPenLineWidth($roomActive, $lineWidth)
 
 </script>
 
