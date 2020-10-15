@@ -1,13 +1,17 @@
+
 <Api />
 
 <main>
+
+	
+	<Auth2 />
+	
 	<Render />
 	
 	<MiniMenu />
 	<HeaderUsers />
 	<RoomList />
 	
-	<Auth />
 	<NetLoading />
 </main>
 
@@ -22,6 +26,10 @@ import RoomList from '@/components/RoomList.svelte'
 import Auth from '@/components/Auth.svelte'
 import NetLoading from '@/components/NetLoading.svelte'
 
+import Auth2 from '@/components/auth/Auth.svelte'
+
+
+
 </script>
 
 
@@ -30,6 +38,9 @@ import NetLoading from '@/components/NetLoading.svelte'
 	margin : 0px;
 	padding: 0px;
 	box-sizing: border-box;
+	
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	tap-highlight-color: rgba(0,0,0,0);
 }
 
 main {

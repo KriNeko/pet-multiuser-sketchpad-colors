@@ -67,8 +67,10 @@ class Room {
 			return
 		
 		this.penWriter.analysisRecvData(userID, data)
-		console.log( this.penWriter.bufferWriter.writeOffset )
+		//console.log( this.penWriter.bufferWriter.writeOffset )
 	}
+	
+	
 
 	toSendFormat() {
 		return {
@@ -78,6 +80,21 @@ class Room {
 			numUsers: this.users.size,
 			numUsersOnline: this.usersOnline.size
 		}
+	}
+
+	sendPenWriterData() {
+		const data = this.penWriter.readData(this.penWriterReadOffset)
+		this.penWriterReadOffset += data.length
+		this.send(data)
+	}
+
+	sendBroadcast(data, withoutClient) {
+		for(const client of this.clients.values())
+			if ( client !== withoutClient )
+				client.send(data)
+	}
+	sendBroadcastJSON(data, withoutClient) {
+		this.sendBroadcast( JSON.stringify(data) )
 	}
 }
 class Rooms extends Map {
@@ -332,6 +349,8 @@ class ClientGuest extends RPCClientBase {
 	actionUserAuthSignin(obj)  { return this._actionUserAuthAddUser( users.actionUserAuthSignin(obj)  ) }
 	actionUserAuthSignup(obj)  { return this._actionUserAuthAddUser( users.actionUserAuthSignup(obj)  ) }
 	actionUserAuthSession(obj) { return this._actionUserAuthAddUser( users.actionUserAuthSession(obj) ) }
+
+	actionUserIsFreeLogin(obj) { return users.actionUserIsFreeLogin(obj) }
 }
 class Client extends RPCClientBase {
 	constructor(webSocket, user, session) {
@@ -426,8 +445,6 @@ class Client extends RPCClientBase {
 		this.user.client = null	
 		this.webSocket.close()
 	}
-	
-	
 	
 	parseBinary(data) {
 		if ( !this.room )

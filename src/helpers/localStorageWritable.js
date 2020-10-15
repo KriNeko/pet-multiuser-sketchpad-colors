@@ -2,7 +2,7 @@
 import { writable } from 'svelte/store'
 
 const getKey = name => {
-	return '_ls_wr_store_b9i8scz65v' + (name)
+	return '_ls_wr_store_b9i8scz65v_' + (name)
 }
 const map = {}
 export const localStorageWritable = (name, initValue) => {

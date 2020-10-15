@@ -25,8 +25,8 @@
 	on:pointerup={blur}
 	on:blur={blur}
 
-	on:pointermove={pointermove}
-	on:touchmove={touchmove}
+	on:pointermove|preventDefault={pointermove}
+	on:touchmove|preventDefault={touchmove}
 />
 
 

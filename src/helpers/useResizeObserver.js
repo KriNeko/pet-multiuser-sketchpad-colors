@@ -1,9 +1,9 @@
-const supportResizeObserver = typeof ResizeObserver !== 'undefined'
+let supportResizeObserver = typeof ResizeObserver !== 'undefined'
 
-export const resizeObserver = (elem, callback) => {
+export const useResizeObserver = (elem, callback) => {
 	const interval = 100
 	if ( supportResizeObserver ) {
-		const resizeObserver = new ResizeObserver(callback)
+		const resizeObserver = new ResizeObserver((a) => callback(a?.[0]?.contentRect))
 		resizeObserver.observe(elem)
 		return { destroy: () => resizeObserver.disconnect() }
 	}
@@ -13,7 +13,7 @@ export const resizeObserver = (elem, callback) => {
 	const loop = () => {
 		const nextBBox = elem.getBoundingClientRect()
 		if ( keys.some(k => prevBBox[k] !== nextBBox[k]) )
-			callback()
+			callback(nextBBox)
 			
 		prevBBox = nextBBox
 	}
