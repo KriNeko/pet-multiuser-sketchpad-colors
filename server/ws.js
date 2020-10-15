@@ -2,13 +2,10 @@
 import WebSocket from 'ws'
 import crypto from 'crypto'
 import { EventEmitter } from 'events'
+import fs from 'fs'
 
-const sendBroadcast = (data, room, withoutUser) => {
-	for(const client of clients)
-		if ( ( !room || client.room === room ) && client !== withoutUser )
-			client.send(data)
-}
-const sendBroadcastJSON = (data, room, withoutUser) => sendBroadcast(JSON.stringify(data), room, withoutUser)
+import { PenWriter } from './penWR/PenWriter.js'
+import { PenWriterGroup } from './penWR/PenWriterGroup.js'
 
 const ERROR_INVALID_INPUT_DATA = 'ERROR_INVALID_INPUT_DATA'
 const ERROR_ESSENCE_ALREADY_EXISTS = 'ERROR_ESSENCE_ALREADY_EXISTS'
@@ -22,8 +19,14 @@ const ERROR_ALREADY_CLIENT_CONNECTING = 'ERROR_ALREADY_CLIENT_CONNECTING'
 const validUserLogin = login => /^[a-z0-9_]{1,14}$/.test(login)
 const validRoomName = validUserLogin
 
-const events = new EventEmitter()
 
+
+const sendBroadcast = (data, room, withoutUser) => {
+	for(const client of clients)
+		if ( ( !room || client.room === room ) && client !== withoutUser )
+			client.send(data)
+}
+const sendBroadcastJSON = (data, room, withoutUser) => sendBroadcast(JSON.stringify(data), room, withoutUser)
 
 class Result {
 	constructor(obj, errorCode = '', errorMessage = '') {
@@ -49,13 +52,25 @@ class Room {
 		this.timeCreate = Date.now()
 		this.roomName = roomName
 		this.userCreator = userCreator
-		
+
 		this.users = new Set([])
 		this.usersOnline = new Set()
 		this.clients = new Set()
 		
 		this.buffer = Buffer.alloc(0)
+
+		this.penWriter = new PenWriter(1024*1024)
 	}
+
+	analysisRecvData(userID, data) {
+		if ( !this.penWriter.canWrite() )
+			return
+		
+		this.penWriter.analysisRecvData(userID, data)
+		//console.log( this.penWriter.bufferWriter.writeOffset )
+	}
+	
+	
 
 	toSendFormat() {
 		return {
@@ -65,6 +80,21 @@ class Room {
 			numUsers: this.users.size,
 			numUsersOnline: this.usersOnline.size
 		}
+	}
+
+	sendPenWriterData() {
+		const data = this.penWriter.readData(this.penWriterReadOffset)
+		this.penWriterReadOffset += data.length
+		this.send(data)
+	}
+
+	sendBroadcast(data, withoutClient) {
+		for(const client of this.clients.values())
+			if ( client !== withoutClient )
+				client.send(data)
+	}
+	sendBroadcastJSON(data, withoutClient) {
+		this.sendBroadcast( JSON.stringify(data) )
 	}
 }
 class Rooms extends Map {
@@ -86,13 +116,6 @@ class Rooms extends Map {
 		this.set(roomName, room)
 
 		return Result.success(room.toSendFormat())
-	}
-	actionRoomConnect(obj, client, user) {
-		const { roomName } = this.parseRoomName(obj)
-		
-		const room = this.get(roomName)
-		if ( !room )
-			throw Result.error(ERROR_ESSENCE_NOT_FOUND)
 	}
 
 	getRoom(obj) {
@@ -326,6 +349,8 @@ class ClientGuest extends RPCClientBase {
 	actionUserAuthSignin(obj)  { return this._actionUserAuthAddUser( users.actionUserAuthSignin(obj)  ) }
 	actionUserAuthSignup(obj)  { return this._actionUserAuthAddUser( users.actionUserAuthSignup(obj)  ) }
 	actionUserAuthSession(obj) { return this._actionUserAuthAddUser( users.actionUserAuthSession(obj) ) }
+
+	actionUserIsFreeLogin(obj) { return users.actionUserIsFreeLogin(obj) }
 }
 class Client extends RPCClientBase {
 	constructor(webSocket, user, session) {
@@ -386,6 +411,9 @@ class Client extends RPCClientBase {
 		this.room = room
 		this.room.clients.add(this)
 		
+		this.penWriterReadOffset = 0
+		this.sendPenWriterData()
+		
 		this.sendBroadcastThisUser()
 		
 		return Result.success(room.toSendFormat())
@@ -402,6 +430,12 @@ class Client extends RPCClientBase {
 		return Result.success(true)
 	}
 
+	sendPenWriterData() {
+		const data = this.room.penWriter.readData(this.penWriterReadOffset)
+		this.penWriterReadOffset += data.length
+		this.send(data)
+	}
+
 	destroy() {
 		this.isOnline = false
 		this.actionRoomDisconnect()
@@ -415,14 +449,17 @@ class Client extends RPCClientBase {
 	parseBinary(data) {
 		if ( !this.room )
 			return
+		
+		this.room.analysisRecvData(this.user.id, data)
 	
 		for(const client of this.room.clients.values()) {
 			if ( client === this ) continue
-			client.send(data)
+			client.sendPenWriterData()
 		}
 	}
 } 	
 
+if(0)
 setInterval(() => {
 	
 	console.log('Num clients %s', clients.length)

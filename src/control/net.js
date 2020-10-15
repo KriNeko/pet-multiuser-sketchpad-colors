@@ -86,7 +86,7 @@ export const rpc = new WebSocketRPCClient()
 globalThis.rpc = rpc
 
 const wsUrl = location.hostname === '127.0.0.1' ? 
-	'ws://127.0.0.1:7485' :
+	'ws://127.0.0.1:7934' :
 	'wss://paint.jsx.su/ws'
 
 function wsReconnect() {
