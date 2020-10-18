@@ -35,6 +35,11 @@ export class WGLUniform {
 	uniform3f(...args) { this.gl.uniform3f(this.location, ...args) }
 	uniform4f(...args) { this.gl.uniform4f(this.location, ...args) }
 	
+	uniform1i(...args) { this.gl.uniform1i(this.location, ...args) }
+	uniform2i(...args) { this.gl.uniform2i(this.location, ...args) }
+	uniform3i(...args) { this.gl.uniform3i(this.location, ...args) }
+	uniform4i(...args) { this.gl.uniform4i(this.location, ...args) }
+	
 	uniformMatrix2fv(data, transpose = false) { this.gl.uniformMatrix2fv(this.location, transpose, data) }
 	uniformMatrix3fv(data, transpose = false) { this.gl.uniformMatrix3fv(this.location, transpose, data) }
 	uniformMatrix4fv(data, transpose = false) { this.gl.uniformMatrix4fv(this.location, transpose, data) }
@@ -157,10 +162,15 @@ export class WGL {
 		if ( !this.gl )
 			throw new Error(`WEBGL not supported`)
 		
-		this.viewWidth  = options.viewWidth
-		this.viewHeight = options.viewHeight
-		
-		this.gl.viewport(0, 0, this.viewWidth, this.viewHeight)
+		options = {
+			viewX: 0,
+			viewY: 0,
+			viewWidth : 0,
+			viewHeight: 0,
+			...options
+		}
+
+		this.viewport(options.viewWidth, options.viewHeight)
 
 		this.supportedExtensions = this.gl.getSupportedExtensions()
 		this.extensions = {}
@@ -180,7 +190,10 @@ export class WGL {
 
 		return this.extensions[pattern] = this.gl.getExtension(name)
 	}
-
+	supportedExtension(patter) {
+		return !!this.requestExtension(patter, false)
+	}
+	
 	createProgram(vsSource, fsSource) {
 		return new WGLProgram(this.gl, vsSource, fsSource)
 	}
@@ -188,5 +201,10 @@ export class WGL {
 		return new WGLBuffer(this.gl, target, usage)
 	}
 
+	viewport(width, height) {
+		this.viewWidth  = width
+		this.viewHeight = height
+		this.gl.viewport(0, 0, this.viewWidth, this.viewHeight)
+	}
 	
 }

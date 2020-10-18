@@ -1,4 +1,5 @@
 
+import { precision } from './wglPrecision.js'
 import { parseNormalizeColorHEX } from './helpers/utils.js'
 
 export class DrawGrid {
@@ -7,7 +8,7 @@ export class DrawGrid {
 		this.options = options
 		
 		this.program = this.wgl.createProgram( 
-		`precision highp float;
+		`precision ${precision} float;
 
 		attribute vec2  aPos;
 		uniform vec2 uViewSize;
@@ -16,7 +17,7 @@ export class DrawGrid {
 			gl_Position = vec4(aPos / (uViewSize / 2.0), 0,  1);
 		}
 		`, 
-		`precision highp float;
+		`precision ${precision} float;
 		uniform vec4 uColor;
 		void main(void) {
 			gl_FragColor = uColor;
@@ -24,7 +25,7 @@ export class DrawGrid {
 		
 		this.make(this.wgl.viewWidth, this.wgl.viewHeight, options.gridCellWidth)	
 	}
-
+ 
 	make(W, H, cellWidth) {
 		if ( this.glBuffer )
 			this.glBuffer.delete()
@@ -53,19 +54,25 @@ export class DrawGrid {
 	draw() {
 		const gl = this.wgl.gl
 		
+		gl.enable( gl.BLEND )
+		gl.blendEquation( gl.FUNC_ADD )
+		gl.blendFunc( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA )
+		
 		this.program.useProgram()
 		this.program.enableVertexAttribArrayAll()
 		
 		this.glBuffer.bindBuffer()
 		
 		this.program.uColor.uniform4f( ...parseNormalizeColorHEX(this.options.gridColorHEX) )
-		this.program.uViewSize.uniform2f(this.options.viewWidth, this.options.viewHeight)
+		this.program.uViewSize.uniform2f(this.wgl.viewWidth, this.wgl.viewHeight)
 		this.program.aPos.pointer({ size: 2 })
 		
 		gl.lineWidth(1)
 		gl.drawArrays(gl.LINES, 0, this.numLines)
 		
 		this.program.disableVertexAttribArrayAll()
+		
+		gl.disable( gl.BLEND )
 	}
 
 	delete() {

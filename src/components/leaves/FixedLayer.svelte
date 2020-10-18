@@ -16,8 +16,8 @@ export let show = false
 <style>
 .conatiner {
 	position: fixed;
-	width: 100vw;
-	height: 100vh;
+	width : 100%;
+	height: 100%;
 	display: flex;
 	top: 0px;
 	left: 0px;

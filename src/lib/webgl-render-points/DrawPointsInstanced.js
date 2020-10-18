@@ -8,42 +8,21 @@ struct point {
 		uint8_t r,g,b,a;
 	};
 	uint16_t pointWidth;
-	uint8_t uv[2];
 }
 */
-const STRIDE = 12
 export class PointsBuffer {
 	constructor(maxNumPoints) {
 		this.maxNumPoints = maxNumPoints
-		this.stride = STRIDE
+		this.stride = 10
 
-		this.ab = new ArrayBuffer( this.maxNumPoints * this.stride * 6 )
+		this.ab = new ArrayBuffer( this.maxNumPoints * this.stride )
 
 		this.i8array  = new Uint8Array(this.ab)
 		this.u8array  = new Uint8Array(this.ab)
 		this.i16array = new Int16Array(this.ab)
 		this.u16array = new Uint16Array(this.ab)
-		this.f32array = new Float32Array(this.ab)
 		
 		this.writeIndex = 0
-		
-		const rectPositions = [
-			[0   ,  0xFF], [0xFF,  0xFF],
-			[0xFF, 0    ], [0   , 0    ],
-		];
-		const _rectPositions = [
-			[-1,  1], [ 1,  1],
-			[ 1, -1], [-1, -1],
-		]
-		this.uvs = [
-			0,1,2, 
-			0,2,3,
-		]
-			.map(i => rectPositions[i])
-			.flat(1e9)
-			
-		console.log( this.uvs )
-		console.log( this.ab.byteLength )
 	}
 	
 	canWrite() {
@@ -58,38 +37,26 @@ export class PointsBuffer {
 		const u8 = this.u8array
 		const i16 = this.i16array
 		const u16 = this.u16array
-		const f32 = this.f32array
-		
-		let offset = this.writeIndex++ * 6 * stride
-		
-		const uvs = this.uvs
-		for(let i = 0; i < uvs.length; i += 2) {
-			i16[ ((offset +  0) >> 1) + 0 ] = Math.round(x * 8)
-			i16[ ((offset +  0) >> 1) + 1 ] = Math.round(y * 8)
-			u8 [ ((offset +  4) >> 0) + 0 ] = r
-			u8 [ ((offset +  4) >> 0) + 1 ] = g
-			u8 [ ((offset +  4) >> 0) + 2 ] = b
-			u8 [ ((offset +  4) >> 0) + 3 ] = a
-			u16[ ((offset +  8) >> 1) + 0 ] = pointWidth
-
-			u8 [ ((offset + 10) >> 0) + 0 ] = uvs[i+0]
-			u8 [ ((offset + 10) >> 0) + 1 ] = uvs[i+1]
-
-			offset += stride
-		}
-
+		const offset = this.writeIndex++ * this.stride
+		i16[ ((offset + 0) >> 1) + 0 ] = Math.round(x * 8)
+		i16[ ((offset + 0) >> 1) + 1 ] = Math.round(y * 8)
+		u8 [ ((offset + 4) >> 0) + 0 ] = r
+		u8 [ ((offset + 4) >> 0) + 1 ] = g
+		u8 [ ((offset + 4) >> 0) + 2 ] = b
+		u8 [ ((offset + 4) >> 0) + 3 ] = a
+		u16[ ((offset + 8) >> 1) + 0 ] = pointWidth
 		return true
 	}
 
 	getWriteData() {
-		return this.u8array.subarray(0, this.writeIndex * this.stride * 6)
+		return this.u8array.subarray(0, this.writeIndex * this.stride)
 	}
 	
 	reset() {
 		this.writeIndex = 0
 	}
 }
-export class DrawPoints {
+export class DrawPointsInstanced {
 	constructor(wgl) {
 		this.wgl = wgl
 	
@@ -99,7 +66,7 @@ export class DrawPoints {
 		attribute vec2  aPos;
 		attribute vec4  aColor;
 		attribute float aWidth;
-		attribute vec2  aUV;
+		attribute vec2 aUV;
 
 		varying vec2  vUV;
 		varying vec4  vColor;
@@ -111,15 +78,13 @@ export class DrawPoints {
 			
 			float width = (aWidth*2.0) / 2.0;
 			
-			vUV = aUV;
-			vUV = vUV * vec2(2, 2) - vec2(1, 1);
-			
 			gl_Position = vec4(
-				(aPos / vec2(8, 8) + (vUV * width)) / screenSizeD2,
+				(aPos / vec2(8, 8) + (aUV * width)) / screenSizeD2,
 				0, 
 				1
 			);
 
+			vUV = aUV;
 			vColor = aColor;
 		}
 		`, 
@@ -153,8 +118,12 @@ export class DrawPoints {
 			//gl_FragColor = vec4(vec3(1,0,0), a);
 			
 		}`)
+		this.glExtInstancedArrays = this.wgl.requestExtension('instanced_arrays')
+		
+		this.stride = 10
+		
 
-		this.maxNumPoints = 16 * 1024
+		this.maxNumPoints = 64 * 1024
 		this.pointsBufferList = []
 		this.addPointsBuffer()
 		
@@ -201,13 +170,12 @@ export class DrawPoints {
 			return
 		
 		this.glBuffer.bindBuffer().bufferSubData(data)
-		const stride = STRIDE
-		this.program.aPos  .pointer({ size: 2, type: gl.SHORT         , stride, offset:  0, normalized: false })
-		this.program.aColor.pointer({ size: 4, type: gl.UNSIGNED_BYTE , stride, offset:  4, normalized: true  })
-		this.program.aWidth.pointer({ size: 1, type: gl.UNSIGNED_SHORT, stride, offset:  8, normalized: false })
-		this.program.aUV   .pointer({ size: 2, type: gl.UNSIGNED_BYTE , stride, offset: 10, normalized: true  })
+		const stride = 10
+		this.program.aPos  .pointer({ size: 2, type: gl.SHORT         , stride, offset: 0, normalized: false })
+		this.program.aColor.pointer({ size: 4, type: gl.UNSIGNED_BYTE , stride, offset: 4, normalized: true })
+		this.program.aWidth.pointer({ size: 1, type: gl.UNSIGNED_SHORT, stride, offset: 8, normalized: false })
 		
-		this.wgl.gl.drawArrays(gl.TRIANGLES, 0, pointsBuffer.writeIndex*6)
+		this.glExtInstancedArrays.drawArraysInstancedANGLE(gl.TRIANGLES, 0, 6, pointsBuffer.writeIndex)
 	}
 	draw() {
 		const program = this.program
@@ -221,10 +189,21 @@ export class DrawPoints {
 		
 		program.uViewSize.uniform2f(this.wgl.viewWidth, this.wgl.viewHeight)
 
+		this.glBufferVertexMesh.bindBuffer()
+		program.aUV.pointer({ size: 2 })
+
+		this.glExtInstancedArrays.vertexAttribDivisorANGLE(program.aPos.location, 1)
+		this.glExtInstancedArrays.vertexAttribDivisorANGLE(program.aColor.location, 1)
+		this.glExtInstancedArrays.vertexAttribDivisorANGLE(program.aWidth.location, 1)
+		
 		for(const pointsBuffer of this.pointsBufferList)
 			this.drawPointsBuffer(pointsBuffer)
 		this.reset()
 		
+		this.glExtInstancedArrays.vertexAttribDivisorANGLE(program.aPos.location, 0)
+		this.glExtInstancedArrays.vertexAttribDivisorANGLE(program.aColor.location, 0)
+		this.glExtInstancedArrays.vertexAttribDivisorANGLE(program.aWidth.location, 0)	
+	
 		program.disableVertexAttribArrayAll()
 		
 		gl.disable( gl.BLEND )

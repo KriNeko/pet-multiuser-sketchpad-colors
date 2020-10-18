@@ -12,6 +12,7 @@
 		</div>
 	</div>
 {/if}
+<!--
 <div class="container" class:roomsShow={roomsShow || !$selfRoomActive} on:mousedown|stopPropagation >
 	<div class="roomsWrapper" >
 		<input 
@@ -42,6 +43,7 @@
 		</div>
 	</div>
 </div>
+-->
 
 <svelte:window on:mousedown={() => $selfRoomActive && (roomsShow = false)} />
 

@@ -45,8 +45,6 @@
 		</div>
 	</div>
 </div>
-
-
 	
 <script>
 

@@ -8,8 +8,10 @@
 	
 	<Render />
 	
-	<MiniMenu />
 	<HeaderUsers />
+	<MiniMenu />
+	<MiniMenuChangeView />
+	
 	<RoomList />
 	
 	<NetLoading />
@@ -28,7 +30,17 @@ import NetLoading from '@/components/NetLoading.svelte'
 
 import Auth2 from '@/components/auth/Auth.svelte'
 
+import MiniMenuChangeView from '@/components/MiniMenuChangeView.svelte'
 
+import Stats from '@/lib/stats'
+const stats = new Stats()
+stats.showPanel( 0 )
+document.body.appendChild( stats.dom )
+function animate() {
+	requestAnimationFrame( animate )
+	stats.update()
+}
+requestAnimationFrame( animate )
 
 </script>
 
@@ -41,10 +53,15 @@ import Auth2 from '@/components/auth/Auth.svelte'
 	
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
 	tap-highlight-color: rgba(0,0,0,0);
+	
+	touch-action: none; 
 }
 
 main {
-	width : 100vw;
-	height: 100vh;	
-}	
+	position: absolute;
+	top : 0px;
+	left: 0px;
+	width : 100%;
+	height: 100%;
+}
 </style>

@@ -1,5 +1,11 @@
 let supportResizeObserver = typeof ResizeObserver !== 'undefined'
 
+const resizeListeners = new Set()
+window.addEventListener('resize', () => {
+	for(const cb of resizeListeners.values())
+		cb()
+})
+
 export const useResizeObserver = (elem, callback) => {
 	const interval = 100
 	if ( supportResizeObserver ) {
@@ -19,6 +25,13 @@ export const useResizeObserver = (elem, callback) => {
 	}
 	loop()
 
+	resizeListeners.add(loop)
+
 	const iiId = setInterval(loop, interval)
-	return { destroy: () => clearInterval(iiId) }
+	return {
+		destroy() {
+			clearInterval(iiId)
+			resizeListeners.delete(loop)
+		}
+	}
 }

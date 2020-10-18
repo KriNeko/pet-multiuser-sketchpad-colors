@@ -47,7 +47,6 @@ async function signin() {
 		return
 	
 	loading = true
-
 	try {
 		setAuth( await rpc.call('actionUserAuthSignin', { login: $login, password }) )
 	} catch(e) {
@@ -60,7 +59,6 @@ async function signin() {
 				passwordErrors = [e?.errorCode, ...passwordErrors]
 		}
 	}
-
 	loading = false
 }
 async function signup() {
@@ -68,20 +66,11 @@ async function signup() {
 		return
 	
 	loading = true
-
 	try {
 		setAuth( await rpc.call('actionUserAuthSignup', { login: $login, password }) )
 	} catch(e) {
-		switch( e?.errorCode ) {
-			case 'ERROR_INVALID_INPUT_DATA':
-				passwordErrors = ['Password is incorrect', ...passwordErrors]
-				break
-			
-			default:
-				passwordErrors = [e?.errorCode, ...passwordErrors]
-		}
+		passwordErrors = [e?.errorCode, ...passwordErrors]
 	}
-
 	loading = false
 }
 async function checkSession() {
@@ -90,9 +79,11 @@ async function checkSession() {
 	
 	loading = true
 	if ( $session ) {
-		let r = await rpc.call('actionUserAuthSession', { session: $session }).then(r => r).catch(e => e)
-		if ( !r.errorCode )
-			setAuth(r)
+		try {
+			setAuth( await rpc.call('actionUserAuthSession', { session: $session }) )
+		} catch(e) {
+			$session = null
+		}
 	}
 	loading = false
 }

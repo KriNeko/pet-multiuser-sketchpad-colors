@@ -85,9 +85,9 @@ class WebSocketRPCClient {
 export const rpc = new WebSocketRPCClient()
 globalThis.rpc = rpc
 
-const wsUrl = location.hostname === '127.0.0.1' ? 
-	'ws://127.0.0.1:7934' :
-	'wss://paint.jsx.su/ws'
+const wsUrl = /krineko/i.test( location.hostname ) ?
+	'wss://paint.jsx.su/ws' :
+	`ws://${ location.hostname }:7934`
 
 function wsReconnect() {
 	const webSocket = new WebSocket( wsUrl )

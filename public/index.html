@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset='utf-8'>
-	<meta name='viewport' content='width=device-width,initial-scale=1'>
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
 
 	<title>...</title>
 
@@ -11,12 +11,31 @@
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono">
 	<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 	
+	<!--
 	<link rel='stylesheet' href='build/bundle.css'>
 	<link rel='stylesheet' href='build/bundle2.css'>
 	<script defer src='build/bundle.js'></script>
+	-->
+
+	<script>
+	(function() {
+		const v = Math.random().toString(36).slice(2)
+		
+		const styles = ['build/bundle.css', 'build/bundle2.css']
+		const scripts = ['build/bundle.js']
+		
+		document.write( 
+			styles
+				.map(s => '<'+`link rel='stylesheet' href='${s}?v=${v}'`+'>')
+				.concat(scripts
+					.map(s => '<'+`script defer src='build/bundle.js?v=${v}'`+'>'+'<'+'/'+'script'+'>')
+				)
+				.join('\n')
+		)
+	})()
+	</script>
 </head>
 
 <body>
-
 </body>
 </html>
