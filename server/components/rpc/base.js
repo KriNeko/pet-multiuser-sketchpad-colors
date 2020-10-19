@@ -1,5 +1,10 @@
 import Result from '../result.js';
 
+import {
+	ERROR_INVALID_RPC_RPCID,
+	ERROR_INVALID_RPC_METHOD
+} from '../../contstants.js';
+
 export default class RPCClientBase {
 	constructor(webSocket) {
 		const methodNameList = Object.getOwnPropertyNames(this.__proto__)

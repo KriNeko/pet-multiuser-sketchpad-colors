@@ -1,3 +1,11 @@
+import Result from './result.js';
+import Room from './room.js';
+import {
+	ERROR_INVALID_INPUT_DATA,
+	ERROR_ESSENCE_ALREADY_EXISTS,
+	ERROR_ESSENCE_NOT_FOUND
+} from '../contstants.js';
+
 export default class Rooms extends Map {
 	parseRoomName(obj) {
 		const roomName = String(obj?.roomName)

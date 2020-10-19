@@ -1,28 +1,8 @@
-
 import WebSocket from 'ws'
-import crypto from 'crypto'
-import { EventEmitter } from 'events'
-import fs from 'fs'
 
-import { PenWriter } from './penWR/PenWriter.js'
-import { PenWriterGroup } from './penWR/PenWriterGroup.js'
-
-import Users from './components/users.js';
-import Rooms from './components/rooms.js';
+import Storage from './components/storage.js';
 import ClientGuest from './components/rpc/guest.js';
-
-const ERROR_INVALID_INPUT_DATA = 'ERROR_INVALID_INPUT_DATA'
-const ERROR_ESSENCE_ALREADY_EXISTS = 'ERROR_ESSENCE_ALREADY_EXISTS'
-const ERROR_ESSENCE_NOT_FOUND = 'ERROR_ESSENCE_NOT_FOUND'
-const ERROR_NO_AUTHORIZATION = 'ERROR_NO_AUTHORIZATION' 
-const ERROR_ALREADY_AUTHORIZATION = 'ERROR_ALREADY_AUTHORIZATION'
-const ERROR_INVALID_RPC_RPCID = 'ERROR_INVALID_RPC_RPCID'
-const ERROR_INVALID_RPC_METHOD = 'ERROR_INVALID_RPC_METHOD'
-const ERROR_ALREADY_CLIENT_CONNECTING = 'ERROR_ALREADY_CLIENT_CONNECTING'
-const PORT = 7934;
- 
-const validUserLogin = login => /^[a-z0-9_]{1,14}$/.test(login)
-const validRoomName = validUserLogin
+import {PORT} from './contstants.js';
 
 const DEBUG_MODE = process.env.DEBUG_MODE || 0;
 
@@ -41,22 +21,7 @@ process.on('unhandledRejection', (error) => {
 	}
 });
 
-const sendBroadcast = (data, room, withoutUser) => {
-	for(const client of clients)
-		if ( ( !room || client.room === room ) && client !== withoutUser )
-			client.send(data)
-}
-const sendBroadcastJSON = (data, room, withoutUser) => sendBroadcast(JSON.stringify(data), room, withoutUser)
-
-
-
-// let roomNextID = 1
-
-const sessions = new Map()
-const users = new Users()
-const rooms = new Rooms()
-const clients = []
- 
+Storage.initInstance();
 
 if(DEBUG_MODE){
 	setInterval(() => {

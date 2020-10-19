@@ -1,6 +1,9 @@
+import { PenWriter } from '../penWR/PenWriter.js'
+// import { PenWriterGroup } from './penWR/PenWriterGroup.js'
+
 export default class Room {
 	constructor(roomName, userCreator) {
-		this.id = roomNextID++
+		this.id = Storage.getInstance().getNextRoomID();
 		this.timeCreate = Date.now()
 		this.roomName = roomName
 		this.userCreator = userCreator

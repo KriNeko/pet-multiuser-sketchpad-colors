@@ -1,5 +1,6 @@
 import RPCClientBase from './base.js';
 import Client from './client.js';
+import Storage from '../storage.js';
 
 export default class ClientGuest extends RPCClientBase {
 	constructor(webSocket) {
@@ -7,7 +8,7 @@ export default class ClientGuest extends RPCClientBase {
 	}
 	
 	_actionUserAuthAddUser(result) {
-		const user = users.get( result.result.login )
+		const user = Storage.getInstance().users.get( result.result.login )
 		const session = result.result.session
 
 		this.detach()
@@ -15,9 +16,9 @@ export default class ClientGuest extends RPCClientBase {
 
 		return result
 	}
-	actionUserAuthSignin(obj)  { return this._actionUserAuthAddUser( users.actionUserAuthSignin(obj)  ) }
-	actionUserAuthSignup(obj)  { return this._actionUserAuthAddUser( users.actionUserAuthSignup(obj)  ) }
-	actionUserAuthSession(obj) { return this._actionUserAuthAddUser( users.actionUserAuthSession(obj) ) }
+	actionUserAuthSignin(obj)  { return this._actionUserAuthAddUser( Storage.getInstance().users.actionUserAuthSignin(obj)  ) }
+	actionUserAuthSignup(obj)  { return this._actionUserAuthAddUser( Storage.getInstance().users.actionUserAuthSignup(obj)  ) }
+	actionUserAuthSession(obj) { return this._actionUserAuthAddUser( Storage.getInstance().users.actionUserAuthSession(obj) ) }
 
-	actionUserIsFreeLogin(obj) { return users.actionUserIsFreeLogin(obj) }
+	actionUserIsFreeLogin(obj) { return Storage.getInstance().users.actionUserIsFreeLogin(obj) }
 }

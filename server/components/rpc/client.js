@@ -1,4 +1,7 @@
 import RPCClientBase from './base.js';
+import Storage from '../storage.js';
+import {sendBroadcastJSON} from '../../utils.js';
+import Result from '../result.js';
 
 export default class Client extends RPCClientBase {
 	constructor(webSocket, user, session) {
@@ -11,12 +14,11 @@ export default class Client extends RPCClientBase {
 		this.user.client = this
 
 		this.isOnline = false
+		Storage.getInstance().clients.push(this)
 
-		clients.push(this)
+		this.sendBroadcastJSON('userList', Storage.getInstance().clients.map(c => c.toSendFormat()) )
+		this.sendBroadcastJSON('roomList', [...Storage.getInstance().rooms.values()].map(c => c.toSendFormat()) )
 
-		this.sendBroadcastJSON('userList', clients.map(c => c.toSendFormat()) )
-		this.sendBroadcastJSON('roomList', [...rooms.values()].map(c => c.toSendFormat()) )
-		
 		this.webSocket.on('close', () => this.destroy())
 	}
 
@@ -44,15 +46,14 @@ export default class Client extends RPCClientBase {
 	}
 
 	actionRoomCreate(obj) {
-		const result = rooms.actionRoomCreate(obj)
-		
-		const room = rooms.get(result.result.roomName)
+		const result = Storage.getInstance().rooms.actionRoomCreate(obj)
+		const room = Storage.getInstance().rooms.get(result.result.roomName)
 		this.sendBroadcastJSON('room', room.toSendFormat())
 		
 		return result
 	}
 	actionRoomConnect(obj) {
-		const room = rooms.getRoom(obj)
+		const room = Storage.getInstance().rooms.getRoom(obj)
 
 		this.actionRoomDisconnect()
 
@@ -89,7 +90,7 @@ export default class Client extends RPCClientBase {
 		this.actionRoomDisconnect()
 		this.sendBroadcastThisUser()
 		
-		clients.splice(clients.indexOf(this), 1)
+		Storage.getInstance().clients.splice(Storage.getInstance().clients.indexOf(this), 1)
 		this.user.client = null	
 		this.webSocket.close()
 	}

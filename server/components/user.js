@@ -1,6 +1,10 @@
+import crypto from 'crypto';
+
+import Storage from './storage.js';
+
 export default class User {
 	constructor(login, password) {
-		this.id = roomNextID++
+		this.id = Storage.getInstance().getNextUserID();
 		this.timeCreate = Date.now()
 		this.login = login
 		this.password = password
@@ -10,7 +14,8 @@ export default class User {
 	
 	createSession() {
 		const session = crypto.randomBytes(32).toString('hex')
-		sessions.set(session, this)
+		Storage.getInstance().sessions.set(session, this);
+		
 		return session
 	}
 	

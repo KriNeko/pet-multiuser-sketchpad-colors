@@ -1,3 +1,13 @@
+import Result from './result.js';
+import Storage from './storage.js';
+import User from './user.js';
+import {
+	ERROR_INVALID_INPUT_DATA,
+	ERROR_ESSENCE_ALREADY_EXISTS,
+	ERROR_ALREADY_CLIENT_CONNECTING
+} from '../contstants.js';
+import {validUserLogin} from '../utils.js'
+
 export default class Users extends Map {
 	userPrepareLoginPassword(obj) {
 		const login = String(obj?.login).toLowerCase()
@@ -37,7 +47,7 @@ export default class Users extends Map {
 	}
 	actionUserAuthSession(obj, client) {
 		const session = String(obj?.session)
-		const user = sessions.get( session )
+		const user = Storage.getInstance().sessions.get( session )
 		if ( !user )
 			throw Result.error(ERROR_INVALID_INPUT_DATA)
 		
