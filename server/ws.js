@@ -2,7 +2,7 @@ import WebSocket from 'ws'
 
 import Storage from './components/storage.js';
 import ClientGuest from './components/rpc/guest.js';
-import {PORT} from './contstants.js'
+import {PORT} from './contstants.js';
 
 const DEBUG_MODE = process.env.DEBUG_MODE || 0;
 

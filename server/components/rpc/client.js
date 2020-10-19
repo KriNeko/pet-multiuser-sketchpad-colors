@@ -14,12 +14,11 @@ export default class Client extends RPCClientBase {
 		this.user.client = this
 
 		this.isOnline = false
-
 		Storage.getInstance().clients.push(this)
 
 		this.sendBroadcastJSON('userList', Storage.getInstance().clients.map(c => c.toSendFormat()) )
 		this.sendBroadcastJSON('roomList', [...Storage.getInstance().rooms.values()].map(c => c.toSendFormat()) )
-		
+
 		this.webSocket.on('close', () => this.destroy())
 	}
 
@@ -48,7 +47,6 @@ export default class Client extends RPCClientBase {
 
 	actionRoomCreate(obj) {
 		const result = Storage.getInstance().rooms.actionRoomCreate(obj)
-		
 		const room = Storage.getInstance().rooms.get(result.result.roomName)
 		this.sendBroadcastJSON('room', room.toSendFormat())
 		

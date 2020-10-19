@@ -1,4 +1,5 @@
 import Result from '../result.js';
+
 import {
 	ERROR_INVALID_RPC_RPCID,
 	ERROR_INVALID_RPC_METHOD
